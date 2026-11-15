@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Preview web motion and export editable Anime.js animations.">
-  <title>Anime Motion Playground</title>
+  <meta name="description" content="Preview Anime.js motion and Matter.js physics, then export editable HTML.">
+  <title>Anime Kinetix Playground</title>
   <style>
     :root { color-scheme: dark; font: 16px/1.5 "Instrument Sans", system-ui, sans-serif; background: #101713; color: #edf5ec; }
     * { box-sizing: border-box; }
@@ -21,6 +21,9 @@
     label span { font-size: 14px; color: #d4e2d6; }
     select, input[type="number"], button { font: inherit; color: inherit; }
     select, input[type="number"] { width: 100%; border: 1px solid #485d4e; border-radius: 7px; padding: 8px 10px; background: #101713; }
+    fieldset { display: grid; gap: 12px; border: 0; padding: 0; margin: 0; min-width: 0; }
+    fieldset[hidden] { display: none; }
+    legend { padding: 0 0 6px; font-weight: 650; }
     input:disabled { opacity: .55; }
     input[type="checkbox"] { accent-color: #a8f2a7; }
     .check { display: flex; align-items: center; gap: 8px; }
@@ -42,23 +45,36 @@
 <body>
   <main>
     <header>
-      <h1>Anime Motion Playground</h1>
-      <p>Tune an animation, preview it, and download editable HTML.</p>
+      <h1>Anime Kinetix Playground</h1>
+      <p>Preview an animation or physics scene and download editable HTML.</p>
     </header>
     <div class="layout">
       <form class="panel settings" id="settings" aria-labelledby="settings-heading">
         <h2 id="settings-heading">Animation settings</h2>
+        <label><span>Engine</span><select name="engine">
+          <option value="anime">Anime.js</option>
+          <option value="matter">Matter.js</option>
+        </select></label>
+        <fieldset data-engine="anime">
+        <legend>Anime.js settings</legend>
         <label><span>Preset</span><select name="preset"></select></label>
         <label><span>Duration (ms)</span><input name="duration" type="number" required></label>
         <label><span>Easing</span><select name="ease"></select></label>
         <label><span>Stagger (ms)</span><input name="stagger" type="number" required></label>
         <label class="check"><input name="loop" type="checkbox"><span>Loop animation</span></label>
+        </fieldset>
+        <fieldset data-engine="matter" hidden disabled>
+          <legend>Matter.js settings</legend>
+          <label><span>Gravity</span><input name="gravity" type="number" step="0.01" required></label>
+          <label><span>Bounce</span><input name="restitution" type="number" step="0.01" required></label>
+          <label><span>Shapes</span><input name="count" type="number" step="1" required></label>
+        </fieldset>
         <button type="submit">Update preview</button>
         <p class="status" id="status" role="status"></p>
       </form>
       <section class="panel canvas" aria-labelledby="preview-heading">
         <div class="bar"><h2 id="preview-heading">Preview</h2></div>
-        <iframe id="preview" title="Anime.js animation preview"></iframe>
+        <iframe id="preview" title="Motion preview"></iframe>
         <div class="bar">
           <div class="actions">
             <button id="copy" type="button" disabled>Copy HTML</button>
@@ -67,10 +83,11 @@
         </div>
       </section>
     </div>
-    <footer>Powered by <a href="https://animejs.com/">Anime.js v4.5.0</a> · <a href="/license">MIT license</a></footer>
+    <footer>Powered by <a href="https://animejs.com/">Anime.js v4.5.0</a> (<a href="/license">MIT</a>) · <a href="https://brm.io/matter-js/">Matter.js v0.20.0</a> (<a href="/matter-license">MIT</a>)</footer>
   </main>
   <script type="module">
-    import { fields, presets, eases, makeHtml, normalize } from './motion.js';
+    import { fields, presets, eases, makeHtml } from './motion.js';
+    import { makePhysicsHtml, physicsFields } from './physics.js';
 
     const form = document.querySelector('#settings');
     const frame = document.querySelector('#preview');
@@ -78,7 +95,7 @@
     const copy = document.querySelector('#copy');
     const download = document.querySelector('#download');
     const controls = form.elements;
-    let current;
+    let filename;
     let html;
 
     for (const [name, options] of Object.entries({ preset: presets, ease: eases })) {
@@ -86,32 +103,43 @@
         controls[name].add(new Option(label, value));
       }
     }
-    for (const name of ['duration', 'stagger']) {
-      controls[name].min = fields[name].minimum;
-      controls[name].max = fields[name].maximum;
-    }
-    for (const [name, field] of Object.entries(fields)) {
-      if (field.type === 'boolean') controls[name].checked = field.default;
-      else controls[name].value = field.default;
+    for (const [name, field] of Object.entries({ ...fields, ...physicsFields })) {
+      const control = controls[name];
+      if (field.type === 'boolean') control.checked = field.default;
+      else control.value = field.default;
+      if (field.minimum !== undefined) control.min = field.minimum;
+      if (field.maximum !== undefined) control.max = field.maximum;
     }
 
-    const syncStagger = () => { controls.stagger.disabled = controls.preset.value !== 'stagger'; };
-    form.addEventListener('change', () => {
-      syncStagger();
+    function syncControls() {
+      for (const fieldset of form.querySelectorAll('[data-engine]')) {
+        const inactive = fieldset.dataset.engine !== controls.engine.value;
+        fieldset.hidden = fieldset.disabled = inactive;
+      }
+      controls.stagger.disabled = controls.preset.value !== 'stagger';
+    }
+
+    form.addEventListener('input', () => {
+      syncControls();
       status.textContent = 'Update the preview to apply your changes.';
       copy.disabled = download.disabled = true;
     });
 
     function update() {
-      current = normalize({
-        preset: controls.preset.value,
-        ease: controls.ease.value,
-        duration: controls.duration.valueAsNumber,
-        stagger: controls.stagger.disabled ? fields.stagger.default : controls.stagger.valueAsNumber,
-        loop: controls.loop.checked,
-      });
-      html = makeHtml(current);
-      frame.srcdoc = makeHtml(current, new URL('/anime.js', location.href).href);
+      const physics = controls.engine.value === 'matter';
+      const schema = physics ? physicsFields : fields;
+      const settings = Object.fromEntries(Object.entries(schema).map(([name, field]) => {
+        const control = controls[name];
+        const value = control.disabled ? field.default
+          : field.type === 'boolean' ? control.checked
+          : field.type === 'string' ? control.value : control.valueAsNumber;
+        return [name, value];
+      }));
+      const generate = physics ? makePhysicsHtml : makeHtml;
+      const library = physics ? '/matter.js' : '/anime.js';
+      filename = physics ? 'matter-bounce.html' : 'anime-' + settings.preset + '.html';
+      html = generate(settings);
+      frame.srcdoc = generate(settings, new URL(library, location.href).href);
       copy.disabled = download.disabled = false;
     }
 
@@ -130,12 +158,12 @@
     });
     download.addEventListener('click', () => {
       const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
-      const link = Object.assign(document.createElement('a'), { href: url, download: 'anime-' + current.preset + '.html' });
+      const link = Object.assign(document.createElement('a'), { href: url, download: filename });
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       status.textContent = 'HTML downloaded.';
     });
-    syncStagger();
+    syncControls();
     update();
   </script>
 </body>

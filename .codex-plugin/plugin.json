@@ -1,0 +1,15 @@
+{
+  "name": "anime-kinetix-codex-plugin",
+  "version": "1.1.0",
+  "description": "Preview and export Anime.js motion and Matter.js physics scenes from Codex.",
+  "author": { "name": "Zed Alleys" },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Anime Kinetix for Codex",
+    "shortDescription": "Anime.js and Matter.js motion",
+    "category": "Developer Tools",
+    "developerName": "Zed Alleys",
+    "defaultPrompt": "Create a bouncing shapes demo with Matter.js and export editable HTML."
+  }
+}

@@ -2,10 +2,10 @@ import { createServer } from 'node:http';
 import { Readable } from 'node:stream';
 import worker from './dist/server/index.js';
 
-const url = 'http://127.0.0.1:4179';
+const port = Number(process.env.ANIME_KINETIX_PORT ?? 4179);
 createServer(async (req, res) => {
   try {
-    const request = new Request(new URL(req.url, url), {
+    const request = new Request(new URL(req.url, 'http://' + (req.headers.host ?? '127.0.0.1:' + port)), {
       method: req.method,
       headers: req.headers,
       ...(req.method === 'GET' || req.method === 'HEAD'
@@ -20,4 +20,6 @@ createServer(async (req, res) => {
     console.error(error);
     res.writeHead(500).end('Preview request failed');
   }
-}).listen(4179, '127.0.0.1', () => console.log('Preview ' + url));
+}).listen(port, '127.0.0.1', function () {
+  console.log('Preview http://127.0.0.1:' + this.address().port);
+});
