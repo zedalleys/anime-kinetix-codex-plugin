@@ -1,5 +1,7 @@
 # Anime Kinetix for Codex
 
+<img src="./assets/logo.svg" width="96" height="96" alt="Anime Kinetix logo">
+
 Anime Kinetix is a Codex plugin and browser playground for creating editable web motion. Use **Anime.js** for scripted animations and **Matter.js** for 2D scenes whose motion comes from gravity and collisions. Generate a complete HTML file in Codex or tune and preview it in the browser.
 
 | Engine | Available scenes | Controls |

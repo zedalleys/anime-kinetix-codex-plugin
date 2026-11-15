@@ -50,7 +50,7 @@ export function handleMessage(message, { playground } = {}) {
       return result({
         protocolVersion: supported.includes(requested) ? requested : supported[0],
         capabilities: { tools: {} },
-        serverInfo: { name: 'anime-kinetix-codex-plugin', version: '1.1.0' },
+        serverInfo: { name: 'anime-kinetix-codex-plugin', version: '1.1.1' },
       });
     }
     case 'ping':

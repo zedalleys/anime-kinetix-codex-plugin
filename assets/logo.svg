@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="anime-kinetix logo">
+  <title>anime-kinetix</title>
+  <defs>
+    <linearGradient id="trail" x1="36" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff4d6d"/>
+      <stop offset="1" stop-color="#ffd166"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="35%" cy="30%" r="75%">
+      <stop offset="0" stop-color="#fff2c2"/>
+      <stop offset="1" stop-color="#ffb703"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#12141c"/>
+  <path d="M38 196 Q76 -96 114 196 Q140 36 166 196 Q180 118 194 196 Q201 160 208 196"
+        fill="none" stroke="url(#trail)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0.1 14"/>
+  <line x1="28" y1="204" x2="228" y2="204" stroke="#3a3f55" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="114" cy="182" rx="32" ry="22" fill="url(#ball)"/>
+</svg>
