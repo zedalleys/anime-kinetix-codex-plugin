@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const assets = {
   page: './page.html',
+  logoSvg: './assets/logo.svg',
   motionModule: './dist/server/motion.js',
   physicsModule: './dist/server/physics.js',
   animeModule: './vendor/anime.esm.min.js',

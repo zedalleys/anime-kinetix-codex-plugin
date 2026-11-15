@@ -1,10 +1,11 @@
 import { handleMessage } from './mcp.js';
-import { page, motionModule, physicsModule, animeModule, matterModule, animeLicense, matterLicense } from './assets.js';
+import { page, logoSvg, motionModule, physicsModule, animeModule, matterModule, animeLicense, matterLicense } from './assets.js';
 
 const js = 'text/javascript; charset=utf-8';
 const plain = 'text/plain; charset=utf-8';
 const assets = new Map([
   ['/', [page, 'text/html; charset=utf-8']],
+  ['/logo.svg', [logoSvg, 'image/svg+xml']],
   ['/motion.js', [motionModule, js]],
   ['/physics.js', [physicsModule, js]],
   ['/anime.js', [animeModule, js]],

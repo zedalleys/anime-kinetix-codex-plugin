@@ -4,13 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Preview Anime.js motion and Matter.js physics, then export editable HTML.">
-  <title>Anime Kinetix Playground</title>
+  <title>Anime Kinetix</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <style>
     :root { color-scheme: dark; font: 16px/1.5 "Instrument Sans", system-ui, sans-serif; background: #101713; color: #edf5ec; }
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { margin: auto; max-width: 1110px; padding: clamp(22px, 5vw, 64px); }
-    header { margin-bottom: 28px; }
+    header { display: flex; align-items: center; gap: clamp(12px, 3vw, 22px); margin-bottom: 28px; }
+    header img { width: clamp(56px, 10vw, 84px); height: auto; flex: none; }
     h1 { font-size: clamp(32px, 6vw, 62px); margin: 0; letter-spacing: -.055em; line-height: 1.1; }
     h2 { font-size: 17px; margin: 0 0 4px; }
     p { color: #b0c1b4; margin: .55rem 0; }
@@ -45,8 +47,11 @@
 <body>
   <main>
     <header>
-      <h1>Anime Kinetix Playground</h1>
-      <p>Preview an animation or physics scene and download editable HTML.</p>
+      <img src="/logo.svg" width="84" height="84" alt="">
+      <div>
+        <h1>Anime Kinetix</h1>
+        <p>Preview Anime.js motion or Matter.js physics and download editable HTML.</p>
+      </div>
     </header>
     <div class="layout">
       <form class="panel settings" id="settings" aria-labelledby="settings-heading">
@@ -83,7 +88,7 @@
         </div>
       </section>
     </div>
-    <footer>Powered by <a href="https://animejs.com/">Anime.js v4.5.0</a> (<a href="/license">MIT</a>) · <a href="https://brm.io/matter-js/">Matter.js v0.20.0</a> (<a href="/matter-license">MIT</a>)</footer>
+    <footer>Powered by <a href="https://animejs.com/">Anime.js v4.5.0</a> (<a href="/license">MIT</a>) · <a href="https://brm.io/matter-js/">Matter.js v0.20.0</a> (<a href="/matter-license">MIT</a>) · <a href="https://github.com/zedalleys/anime-kinetix-codex-plugin#readme">Documentation</a></footer>
   </main>
   <script type="module">
     import { fields, presets, eases, makeHtml } from './motion.js';
