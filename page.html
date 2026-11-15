@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Preview web motion and export editable Anime.js animations.">
+  <title>Anime Motion Playground</title>
+  <style>
+    :root { color-scheme: dark; font: 16px/1.5 "Instrument Sans", system-ui, sans-serif; background: #101713; color: #edf5ec; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { margin: auto; max-width: 1110px; padding: clamp(22px, 5vw, 64px); }
+    header { margin-bottom: 28px; }
+    h1 { font-size: clamp(32px, 6vw, 62px); margin: 0; letter-spacing: -.055em; line-height: 1.1; }
+    h2 { font-size: 17px; margin: 0 0 4px; }
+    p { color: #b0c1b4; margin: .55rem 0; }
+    .layout { display: grid; grid-template-columns: minmax(220px, 270px) minmax(0, 1fr); gap: 18px; }
+    .panel { border: 1px solid #34453a; border-radius: 14px; background: #17221b; min-width: 0; }
+    .settings { display: grid; align-content: start; gap: 16px; padding: 20px; }
+    label:not(.check) { display: grid; gap: 5px; }
+    label span { font-size: 14px; color: #d4e2d6; }
+    select, input[type="number"], button { font: inherit; color: inherit; }
+    select, input[type="number"] { width: 100%; border: 1px solid #485d4e; border-radius: 7px; padding: 8px 10px; background: #101713; }
+    input:disabled { opacity: .55; }
+    input[type="checkbox"] { accent-color: #a8f2a7; }
+    .check { display: flex; align-items: center; gap: 8px; }
+    .canvas { display: flex; flex-direction: column; overflow: hidden; }
+    .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 18px; }
+    .bar h2 { margin: 0; }
+    iframe { width: 100%; flex: 1; min-height: 320px; display: block; border: none; background: #0b1411; }
+    button { border: 1px solid #54685a; border-radius: 7px; background: #223128; padding: 7px 12px; cursor: pointer; }
+    button.primary { background: #a8f2a7; border-color: #a8f2a7; color: #112318; font-weight: 650; }
+    button:disabled { opacity: .55; cursor: default; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid #a8f2a7; outline-offset: 3px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .status { margin: 0; min-height: 1.5em; font-size: 14px; }
+    footer { margin-top: 18px; font-size: 14px; color: #b0c1b4; }
+    a { color: #a8f2a7; }
+    @media (max-width: 690px) { .layout { grid-template-columns: 1fr; } iframe { min-height: 280px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Anime Motion Playground</h1>
+      <p>Tune an animation, preview it, and download editable HTML.</p>
+    </header>
+    <div class="layout">
+      <form class="panel settings" id="settings" aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Animation settings</h2>
+        <label><span>Preset</span><select name="preset"></select></label>
+        <label><span>Duration (ms)</span><input name="duration" type="number" required></label>
+        <label><span>Easing</span><select name="ease"></select></label>
+        <label><span>Stagger (ms)</span><input name="stagger" type="number" required></label>
+        <label class="check"><input name="loop" type="checkbox"><span>Loop animation</span></label>
+        <button type="submit">Update preview</button>
+        <p class="status" id="status" role="status"></p>
+      </form>
+      <section class="panel canvas" aria-labelledby="preview-heading">
+        <div class="bar"><h2 id="preview-heading">Preview</h2></div>
+        <iframe id="preview" title="Anime.js animation preview"></iframe>
+        <div class="bar">
+          <div class="actions">
+            <button id="copy" type="button" disabled>Copy HTML</button>
+            <button id="download" type="button" class="primary" disabled>Download HTML</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer>Powered by <a href="https://animejs.com/">Anime.js v4.5.0</a> · <a href="/license">MIT license</a></footer>
+  </main>
+  <script type="module">
+    import { fields, presets, eases, makeHtml, normalize } from './motion.js';
+
+    const form = document.querySelector('#settings');
+    const frame = document.querySelector('#preview');
+    const status = document.querySelector('#status');
+    const copy = document.querySelector('#copy');
+    const download = document.querySelector('#download');
+    const controls = form.elements;
+    let current;
+    let html;
+
+    for (const [name, options] of Object.entries({ preset: presets, ease: eases })) {
+      for (const [value, label] of Object.entries(options)) {
+        controls[name].add(new Option(label, value));
+      }
+    }
+    for (const name of ['duration', 'stagger']) {
+      controls[name].min = fields[name].minimum;
+      controls[name].max = fields[name].maximum;
+    }
+    for (const [name, field] of Object.entries(fields)) {
+      if (field.type === 'boolean') controls[name].checked = field.default;
+      else controls[name].value = field.default;
+    }
+
+    const syncStagger = () => { controls.stagger.disabled = controls.preset.value !== 'stagger'; };
+    form.addEventListener('change', () => {
+      syncStagger();
+      status.textContent = 'Update the preview to apply your changes.';
+      copy.disabled = download.disabled = true;
+    });
+
+    function update() {
+      current = normalize({
+        preset: controls.preset.value,
+        ease: controls.ease.value,
+        duration: controls.duration.valueAsNumber,
+        stagger: controls.stagger.disabled ? fields.stagger.default : controls.stagger.valueAsNumber,
+        loop: controls.loop.checked,
+      });
+      html = makeHtml(current);
+      frame.srcdoc = makeHtml(current, new URL('/anime.js', location.href).href);
+      copy.disabled = download.disabled = false;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      update();
+      status.textContent = 'Preview updated.';
+    });
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(html);
+        status.textContent = 'HTML copied.';
+      } catch {
+        status.textContent = 'Clipboard unavailable. Use Download HTML.';
+      }
+    });
+    download.addEventListener('click', () => {
+      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+      const link = Object.assign(document.createElement('a'), { href: url, download: 'anime-' + current.preset + '.html' });
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = 'HTML downloaded.';
+    });
+    syncStagger();
+    update();
+  </script>
+</body>
+</html>
